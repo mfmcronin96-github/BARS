@@ -24,6 +24,7 @@ namespace TransModel {
 template<typename V, typename F>
 void create_r_network(double tick, List& rnet, Network<V>& net, std::map<unsigned int, unsigned int>& idx_to_v_map,
 		const F& attributes_setter, int edge_type) {
+
 	List gal;
 	gal["n"] = net.vertexCount();
 	gal["directed"] = false;
@@ -38,6 +39,8 @@ void create_r_network(double tick, List& rnet, Network<V>& net, std::map<unsigne
 	List val(vCount);
 	List iel(vCount);
 	List oel(vCount);
+
+	IntegerVector iv = iel[2];
 
 	std::map<unsigned int, unsigned int> v_to_idx_map;
 	std::map<unsigned int, unsigned int> iel_idx_map;

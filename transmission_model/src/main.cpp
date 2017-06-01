@@ -2,6 +2,8 @@
 #include <vector>
 #include <iostream>
 
+#include <execinfo.h>
+
 #include "repast_hpc/initialize_random.h"
 #include "repast_hpc/RepastProcess.h"
 #include "repast_hpc/io.h"
@@ -20,6 +22,20 @@
 
 using namespace Rcpp;
 using namespace TransModel;
+
+void handler(int sig) {
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  fprintf(stdout, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDOUT_FILENO);
+  exit(1);
+}
+
 
 void init_network(std::shared_ptr<RInside>& R, const std::string& r_file) {
 	std::string cmd = "source(file=\"" + r_file + "\")";
@@ -113,6 +129,7 @@ void run(std::string propsFile, int argc, char** argv) {
 }
 
 int main(int argc, char *argv[]) {
+	signal(SIGSEGV, handler);
 	boost::mpi::environment env(argc, argv);
 
 	if (argc < 2 || argc > 3) {
