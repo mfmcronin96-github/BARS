@@ -3,9 +3,9 @@
 
 set -eu
 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -ne 1 ]; then
   script_name=$(basename $0)
-  echo "Usage: ${script_name} EXPERIMENT_ID SCENARIO_PARAMS_FILE (e.g. ${script_name} experiment_1 5K_params.sh)"
+  echo "Usage: ${script_name} EXPERIMENT_ID (e.g. ${script_name} experiment_1 5K_params.sh)"
   exit 1
 fi
 
@@ -58,18 +58,18 @@ if [ -n "$MACHINE" ]; then
 fi
 
 # source the params file
-SCENARIO_PARAMS_FILE=$THIS/$2
-source $SCENARIO_PARAMS_FILE
+#SCENARIO_PARAMS_FILE=$THIS/$2
+#source $SCENARIO_PARAMS_FILE
 
-PARAM_ARGS="-daily.entry.rate=$DAILY_ENTRY_RATE -prep.mean.days.usage.lt=$PREP_MEAN_DAYS_USAGE_LT "
-PARAM_ARGS+="-prep.mean.days.usage.gte=$PREP_MEAN_DAYS_USAGE_GTE -prep.bl.use.prop.lt=$PREP_BL_USE_PROP_LT "
-PARAM_ARGS+="-prep.bl.use.prop.gte=$PREP_BL_USE_PROP_GTE -model_sh=$MODEL_SH"
+#PARAM_ARGS="-daily.entry.rate=$DAILY_ENTRY_RATE -prep.mean.days.usage.lt=$PREP_MEAN_DAYS_USAGE_LT "
+#PARAM_ARGS+="-prep.mean.days.usage.gte=$PREP_MEAN_DAYS_USAGE_GTE -prep.bl.use.prop.lt=$PREP_BL_USE_PROP_LT "
+#PARAM_ARGS+="-prep.bl.use.prop.gte=$PREP_BL_USE_PROP_GTE -model_sh=$MODEL_SH"
 
 # Add any script variables that you want to log as
 # part of the experiment meta data to the USER_VARS array,
 # for example, USER_VARS=("VAR_1" "VAR_2")
 USER_VARS=("DAILY_ENTRY_RATE" "PREP_MEAN_DAYS_USAGE_LT" "PREP_MEAN_DAYS_USAGE_GTE"
-  "PREP_BL_USE_PROP_LT" "PREP_BL_USE_PROP_GTE" "SCENARIO_PARAMS_FILE")
+  "PREP_BL_USE_PROP_LT" "PREP_BL_USE_PROP_GTE")
 # log variables and script to to TURBINE_OUTPUT directory
 log_script
 
@@ -79,7 +79,7 @@ cp $EMEWS_PROJECT_ROOT/../config/model.props $TURBINE_OUTPUT/
 set -x
 
 
-swift-t -n $PROCS $MACHINE -p $EMEWS_PROJECT_ROOT/swift/trans_model_sweep.swift -f="$EMEWS_PROJECT_ROOT/data/test_input_params.txt" $PARAM_ARGS $CMD_LINE_ARGS
+swift-t -n $PROCS $MACHINE -p $EMEWS_PROJECT_ROOT/swift/trans_model_sweep.swift -f="$EMEWS_PROJECT_ROOT/data/test_input_params.txt" -model_sh=$MODEL_SH $CMD_LINE_ARGS
 
 
 #swift-t -n $PROCS $MACHINE -p $EMEWS_PROJECT_ROOT/swift/trans_model_sweep.swift -f="$EMEWS_PROJECT_ROOT/data/upf_Morris_1_seeds1to10.txt" -model_sh=$MODEL_SH $CMD_LINE_ARGS
