@@ -203,6 +203,10 @@ default.prep.years.to.increment <- 5
 # "unbalanced" - use prep uptake algorithm that does not "balance" update and cessation
 default.prep.balanced.unbalanced <- 'balanced'
 
+# used to determine uptake in "unbalanced" algorighm, otherwise ignored
+default.prep.unbalanced.starting.prob.lt <- 1 / 365
+deafult.prep.unbalanced.starting.prob.gte <- 1 / 365
+
 ## End Default Parameters ##
 
 ## Young Old Ratio PrEP Uptake Parameters ##
