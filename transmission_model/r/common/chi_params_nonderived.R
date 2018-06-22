@@ -1,6 +1,9 @@
 ## non-derived chicago parameters
 ## initial values of parameters
 
+## seed value for swift runs
+global.random.seed <- 1:10
+
    #####################
    ## NETWORK (steady)
      n <- 5000
