@@ -4,6 +4,7 @@ import files;
 import R;
 import python;
 import string;
+import launch;
 
 string emews_root = getenv("EMEWS_PROJECT_ROOT");
 string turbine_output = getenv("TURBINE_OUTPUT");
@@ -77,7 +78,9 @@ run_prerequisites() => {
       file out <instance+"out.txt">;
       file err <instance+"err.txt">;
       string params = s; //param_args + "," + s;
-      (out,err) = run_model(model_sh, params, instance) => {
+      string args[] = [s, emews_root, instance];
+      //(out,err) = run_model(model_sh, params, instance) => {
+       @par=1 launch(model_sh_file, args) => {
         string summarize_code = summarize_template % (emews_root, instance + "output/counts.csv");
         string result = R(summarize_code, "a");
         if (length(result) > 0) {
