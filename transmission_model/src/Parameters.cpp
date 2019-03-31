@@ -3,6 +3,8 @@
  *
  *  Created on: Jun 5, 2012
  *      Author: nick
+ *  Modified on 28 March 2019 
+ *      By Babak (added parameter for lower & upper jail term probability)
  */
 
 #include "boost/algorithm/string.hpp"
@@ -31,6 +33,7 @@ const std::string STOP_AT = "stop.at";
 const std::string R_PARAMETERS_DERIVED = "r.parameters.derived";
 const std::string R_PARAMETERS_NON_DERIVED = "r.parameters.non.derived";
 const std::string R_FILE = "r.file";
+const std::string INIT_DATA_FILE = "initial.data.file";
 const std::string MAIN_NETWORK_FILE = "main.network.file";
 const std::string CASUAL_NETWORK_FILE = "casual.network.file";
 const std::string EVENT_FILE = "event.file";
@@ -263,6 +266,12 @@ const std::string EXTERNAL_INFECTION_RATE_MIN = "external.infections.per.person.
 const std::string EXTERNAL_INFECTION_RATE_MAX = "external.infections.per.person.day.max";
 const std::string EXTERNAL_INFECTION_AGE_FACTOR = "external.infections.age.factor";
 
+const std::string INPUT_LOWER_JAIL_TERM_PROB = "input.lower.jail.term.prob";
+const std::string INPUT_UPPER_JAIL_TERM_PROB = "input.upper.jail.term.prob";
+
+const std::string INCARCERATION_PROB_FOR_ENTRIES = "incarceration.prob.for.entries";
+
+
 
 Parameters* Parameters::instance_ = 0;
 
@@ -281,7 +290,8 @@ Parameters::~Parameters() {
 
 }
 
-void Parameters::initialize(Properties& props) {
+void Parameters::initialize(Properties &props)
+{
     if (instance_ != 0) {
         delete instance_;
     }

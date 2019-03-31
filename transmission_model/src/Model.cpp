@@ -3,6 +3,8 @@
  *
  *  Created on: Oct 8, 2015
  *      Author: nick
+ *  Modified on: 1 Mar 2019 
+ *      by Babak (added jail related functions)
  */
 
 #include <cmath>
@@ -51,6 +53,9 @@ namespace TransModel {
 
 const std::string BALANCED = "balanced";
 const double VS_VL_COUNT = std::log10(2) + 2;
+
+
+PersonPtr aPerson; //tmp
 
 PartnershipEvent::PEventType cod_to_PEvent(CauseOfDeath cod) {
     if (cod == CauseOfDeath::AGE)
@@ -817,7 +822,7 @@ Model::Model(shared_ptr<RInside>& ri, const std::string& net_var, const std::str
                     Parameters::instance()->getDoubleParameter(DETECTION_WINDOW), art_lag_calculator}, prep_manager(),	
                 condom_assigner { create_condom_use_assigner() },
                 asm_runner { create_ASM_runner() },  cd4m_treated_runner{ create_cd4m_runner(CD4M_TREATED_PREFIX)}, 
-                age_threshold{Parameters::instance()->getFloatParameter(INPUT_AGE_THRESHOLD)} {
+                age_threshold{Parameters::instance()->getFloatParameter(INPUT_AGE_THRESHOLD)}, jail{}{
 
     std::cout << "treated: " << cd4m_treated_runner << std::endl;
     // get initial stats
@@ -922,6 +927,51 @@ void Model::countOverlap() {
     }
 }
 
+/**
+* Call this function to jail a person
+*/
+void Model::jailPerson(PersonPtr& person, double time_stamp, double serving_time) {
+
+    //std::cout << "++Model:JailPerson(), time_stamp: " << time_stamp;
+    //std::cout << ", serving_time: " << serving_time << std::endl;
+    
+    jail.addPerson(person, time_stamp, serving_time);
+
+    /* @TODO: removing the [social] network of a person may need to be done by the jail object itslef where 
+    the social netork may be needed to be saved and reinstated when the person is released. 
+    In that case, an instance of the network [net] may need to be passed to jail as parameter.  */
+    net.removeVertex(person); 
+
+    //person->printJailRecord(time_stamp);
+}
+
+/**
+* Call this function to release a person from jail 
+*/
+void Model::releasePersonFromJail(PersonPtr& person, double time_stamp) {
+
+    if (person !=nullptr) {
+        jail.releasePerson(person, time_stamp);
+        /*@TODO: how to reinstate the network of the person (as if it was before going to jail)
+         * this may need to be done by the jail object.
+        */
+        //net.addVertex(person); 
+     }
+     else {
+        std::cout << "*** ERROR: Model:releasePersonFromJail(): person is null" << std::endl;
+     }
+}
+
+/**
+* Jail circulation process 
+*/
+void Model::jailCirculation(double tick){
+    //std::cout << "--Model:jailCicrulation(), tick:" << tick<< std::endl;
+    //std::cout << "Jail pop size: " << jail.populationSize() << std::endl;
+    //jail.printPopulationInfo(tick);
+    jail.checkAndReleaseTimeServedPopulation(tick);
+}
+
 void Model::step() {
     double t = RepastProcess::instance()->getScheduleRunner().currentTick();
     Stats* stats = Stats::instance();
@@ -939,6 +989,7 @@ void Model::step() {
     // updates (i.e. simulates) the partner network
     simulate(R, net, p2val, condom_assigner, t);
 
+
     if (Parameters::instance()->getBooleanParameter(COUNT_OVERLAPS)) {
         countOverlap();
     } else {
@@ -947,10 +998,14 @@ void Model::step() {
 
     // introduce new persons into the model
     entries(t, size_of_timestep);
+
+    jailCirculation(t);
+
     // run the HIV transmission algorithm 
     runTransmission(t);
 
     vector<PersonPtr> uninfected;
+
 
     // update the physiological etc. (vital) attributes of the population
     // updating cd4 counts, checking for death, diagnosing persons, etc.
@@ -1146,22 +1201,35 @@ void Model::infectPerson(PersonPtr& person, double time_stamp) {
     }
 }
 
+
+
 void Model::entries(double tick, float size_of_timestep) {
     float min_age = Parameters::instance()->getFloatParameter(MIN_AGE);
     size_t pop_size = net.vertexCount();
     if (pop_size > 0) {
         double births_prob = Parameters::instance()->getDoubleParameter(DAILY_ENTRY_RATE);
+
+        int jail_term_from =  Parameters::instance()->getIntParameter(INPUT_LOWER_JAIL_TERM_PROB);
+        int jail_term_to   =  Parameters::instance()->getIntParameter(INPUT_UPPER_JAIL_TERM_PROB);
+
         PoissonGen birth_gen(Random::instance()->engine(), boost::random::poisson_distribution<>(births_prob));
+        //BinomialGen jailed_pop_gen(repast::Random::instance()->engine(), boost::random::binomial_distribution<>(pop_size, 0.1));
+        IntUniformGenerator jail_term_gen = Random::instance()->createUniIntGenerator(jail_term_from, jail_term_to);
+
         DefaultNumberGenerator<PoissonGen> gen(birth_gen);
+        //DefaultNumberGenerator<BinomialGen> gen_jailedPopSize(jailed_pop_gen);
+
         int entries = (int) gen.next();
+
         Stats* stats = Stats::instance();
         stats->currentCounts().entries = entries;
-        //std::cout << "entries: " << entries << std::endl;
 
         double infected_prob = Parameters::instance()->getDoubleParameter(INIT_HIV_PREV_ENTRIES);
+        double incarceration_prob = Parameters::instance()->getDoubleParameter(INCARCERATION_PROB_FOR_ENTRIES);
 
         for (int i = 0; i < entries; ++i) {
             VertexPtr<Person> p = person_creator(tick, min_age);
+
             if (Random::instance()->nextDouble() <= infected_prob) {
                 // as if infected at previous timestep
                 float infected_at = tick - (size_of_timestep * 1);
@@ -1176,8 +1244,15 @@ void Model::entries(double tick, float size_of_timestep) {
             }
             net.addVertex(p);
             Stats::instance()->personDataRecorder()->initRecord(p, tick);
+
+            //given a prorbablity, jail a person
+            if (Random::instance()->nextDouble() <=  incarceration_prob) {
+                double serving_time = (double) jail_term_gen.next();
+                jailPerson(p, tick, serving_time);
+                //net.removeVertex(p);
+            }
         }
-    }
+    } 
 }
 
 std::string get_net_out_filename(const std::string& file_name) {

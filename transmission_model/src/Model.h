@@ -3,6 +3,9 @@
  *
  *  Created on: Oct 8, 2015
  *      Author: nick
+ *  Modified on: 1 Mar 2019 
+ *      by Babak (added jail related functions)
+ * 
  */
 
 #ifndef SRC_MODEL_H_
@@ -28,6 +31,8 @@
 #include "RangeWithProbability.h"
 #include "ARTLagCalculator.h"
 #include "PrepInterventionManager.h"
+
+#include "Jail.h"
 
 namespace TransModel {
 
@@ -60,6 +65,9 @@ private:
 
     float age_threshold;
 
+    Jail jail;
+    //std::unique_ptr<Jail> jail_runner;
+
     void runTransmission(double timestamp);
     CauseOfDeath dead(double tick, PersonPtr person, int max_survival);
     void entries(double tick, float size_of_time_step);
@@ -84,6 +92,15 @@ private:
      * Initializes PrEP cessation events for the initial set of persons.
      */
     void initPrepCessation();
+
+
+    /**
+     * Functions related to Jail Circulation process.
+     */
+    void jailCirculation(double time);
+    void jailPerson(PersonPtr& person, double time_stamp, double serving_time);
+    void releasePersonFromJail(PersonPtr& person, double time_stamp);
+
 
 public:
     Model(std::shared_ptr<RInside>& r_ptr, const std::string& net_var, const std::string& cas_net_var);
