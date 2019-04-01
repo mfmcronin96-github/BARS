@@ -999,6 +999,7 @@ void Model::step() {
     // introduce new persons into the model
     entries(t, size_of_timestep);
 
+    //jail circulation process
     jailCirculation(t);
 
     // run the HIV transmission algorithm 
