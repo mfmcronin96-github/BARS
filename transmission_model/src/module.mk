@@ -39,8 +39,7 @@ CPP_SOURCE = Person.cpp \
     NetStatPrepIntervention.cpp \
     RandomSelectionPrepIntervention.cpp \
     PrepAgeFilter.cpp \
-    Logger.cpp \
-    Jail.cpp
+    Logger.cpp
     
 
 c_source += $(C_SOURCE)

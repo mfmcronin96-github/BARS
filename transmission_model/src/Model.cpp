@@ -837,7 +837,7 @@ Model::Model(shared_ptr<RInside>& ri, const std::string& net_var, const std::str
                     Parameters::instance()->getDoubleParameter(DETECTION_WINDOW), art_lag_calculator}, prep_manager(),	
                 condom_assigner { create_condom_use_assigner() },
                 asm_runner { create_ASM_runner() },  cd4m_treated_runner{ create_cd4m_runner(CD4M_TREATED_PREFIX)}, 
-                age_threshold{Parameters::instance()->getFloatParameter(INPUT_AGE_THRESHOLD)}, jail(&net) {
+                age_threshold{Parameters::instance()->getFloatParameter(INPUT_AGE_THRESHOLD)} /*, jail(&net) */ {
 
     std::cout << "treated: " << cd4m_treated_runner << std::endl;
     // get initial stats
@@ -1045,7 +1045,7 @@ void Model::updateVitals(double tick, float size_of_timestep, int max_age, vecto
     float time_to_full_supp = Parameters::instance()->getFloatParameter(TIME_TO_FULL_SUPP);
     int vs_count = 0, inf_count = 0, diagnosed_count = 0, vs_pos_count = 0;
 
-    double incarceration_prob = Parameters::instance()->getDoubleParameter(INCARCERATION_PROB_FOR_ENTRIES);
+    //double incarceration_prob = Parameters::instance()->getDoubleParameter(INCARCERATION_PROB_FOR_ENTRIES);
 
     // iterate through all the network vertices (i.e. the persons)
     for (auto iter = population.begin(); iter != population.end(); ) {
@@ -1081,9 +1081,9 @@ void Model::updateVitals(double tick, float size_of_timestep, int max_age, vecto
             }
             net.removeVertex(person);
             iter = population.erase(iter);
-            if (person->isJailed()) {
-	            jail.removeDeadPerson(tick, person);
-            }
+            // if (person->isJailed()) {
+	        //     jail.removeDeadPerson(tick, person);
+            // }
             ++dead_count;
         } else {
             // don't count dead uninfected persons
@@ -1114,9 +1114,9 @@ void Model::updateVitals(double tick, float size_of_timestep, int max_age, vecto
                 }
             }
 
-            if (!person->isJailed() && Random::instance()->nextDouble() <=  incarceration_prob) {
-	            jail.addPerson(tick, person);
-	        }
+            // if (!person->isJailed() && Random::instance()->nextDouble() <=  incarceration_prob) {
+	        //     jail.addPerson(tick, person);
+	        // }
 
             if (person->isOnART()) {
                 ++stats->currentCounts().on_art;

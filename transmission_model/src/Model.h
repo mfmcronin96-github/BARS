@@ -60,7 +60,7 @@ private:
     CondomUseAssigner condom_assigner;
     RangeWithProbability asm_runner, cd4m_treated_runner;
     float age_threshold;
-    Jail jail;
+    //Jail jail;
 
     void runTransmission(double timestamp);
     CauseOfDeath dead(double tick, PersonPtr person, int max_survival);
