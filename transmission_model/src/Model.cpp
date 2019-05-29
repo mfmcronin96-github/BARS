@@ -1069,6 +1069,7 @@ void Model::updateVitals(double tick, float size_of_timestep, int max_age, vecto
         bool crossed_thresh = person->step(size_of_timestep, age_threshold);
         // check person for "death" -- aging out, death by infection.
         CauseOfDeath cod = dead(tick, person, max_age);
+
         if (cod != CauseOfDeath::NONE) {
             // person died -- remove them from model, network, etc.
             vector<EdgePtr<Person>> edges;
@@ -1287,7 +1288,6 @@ CauseOfDeath Model::dead(double tick, PersonPtr person, int max_age) {
             } else {
                 ++Stats::instance()->currentCounts().asm_deaths;
                 Stats::instance()->recordDeathEvent(tick, person, DeathEvent::ASM);
-                Stats::instance()->personDataRecorder()->recordDeath(person, tick);
                 cod = CauseOfDeath::ASM;
             }
         } 
